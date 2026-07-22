@@ -7,7 +7,7 @@ Caddy with [klzgrad/forwardproxy@naive](https://github.com/klzgrad/forwardproxy/
 ### Docker (recommended)
 
 ```bash
-docker pull ghcr.io/rwecho/caddy-forwardproxy:latest
+docker pull <docker-hub-username>/caddy-forwardproxy:latest
 ```
 
 Or build locally:
@@ -57,9 +57,7 @@ xcaddy build --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwa
 
 ## GitHub Actions
 
-On push to `main` or tag `v*.*.*`, the CI workflow builds multi-arch images (linux/amd64, linux/arm64) and pushes to:
-- Docker Hub (`${{ secrets.DOCKER_USERNAME }}/caddy-forwardproxy`)
-- GitHub Container Registry (`ghcr.io/<owner>/caddy-forwardproxy`)
+On push to `master` or tag `v*.*.*`, the CI workflow builds multi-arch images (linux/amd64, linux/arm64) and pushes to Docker Hub (`${{ secrets.DOCKER_USERNAME }}/caddy-forwardproxy`).
 
 Set the following **repository secrets**:
 - `DOCKER_USERNAME` — Docker Hub username

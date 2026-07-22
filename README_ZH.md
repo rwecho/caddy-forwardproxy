@@ -7,7 +7,7 @@
 ### Docker（推荐）
 
 ```bash
-docker pull ghcr.io/rwecho/caddy-forwardproxy:latest
+docker pull <docker-hub-用户名>/caddy-forwardproxy:latest
 ```
 
 或本地构建：
@@ -57,9 +57,7 @@ xcaddy build --with github.com/caddyserver/forwardproxy=github.com/klzgrad/forwa
 
 ## GitHub Actions
 
-推送到 `main` 分支或 `v*.*.*` 标签时，CI 工作流会构建多架构镜像（linux/amd64, linux/arm64）并推送到：
-- Docker Hub（`${{ secrets.DOCKER_USERNAME }}/caddy-forwardproxy`）
-- GitHub Container Registry（`ghcr.io/<仓库所有者>/caddy-forwardproxy`）
+推送到 `master` 分支或 `v*.*.*` 标签时，CI 工作流会构建多架构镜像（linux/amd64, linux/arm64）并推送到 Docker Hub（`${{ secrets.DOCKER_USERNAME }}/caddy-forwardproxy`）。
 
 需要在仓库中设置以下 **Secrets**：
 - `DOCKER_USERNAME` — Docker Hub 用户名
