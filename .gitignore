@@ -1,0 +1,5 @@
+caddy
+*.exe
+*.test
+*.out
+__debug_bin
