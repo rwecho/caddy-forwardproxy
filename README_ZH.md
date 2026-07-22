@@ -7,7 +7,7 @@
 ### Docker（推荐）
 
 ```bash
-docker pull ghcr.io/<你的用户名>/caddy-forwardproxy:latest
+docker pull ghcr.io/rwecho/caddy-forwardproxy:latest
 ```
 
 或本地构建：

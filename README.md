@@ -7,7 +7,7 @@ Caddy with [klzgrad/forwardproxy@naive](https://github.com/klzgrad/forwardproxy/
 ### Docker (recommended)
 
 ```bash
-docker pull ghcr.io/<your-username>/caddy-forwardproxy:latest
+docker pull ghcr.io/rwecho/caddy-forwardproxy:latest
 ```
 
 Or build locally:
