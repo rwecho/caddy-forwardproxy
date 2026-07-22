@@ -141,11 +141,15 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          digests=$(cat *)
-          tags=${{ toJSON(steps.meta.outputs.tags) }}
-          sources=$(echo "$digests" | jq -R -s -c 'split("\n") | map(select(length > 0)) | map("${{ env.REGISTRY_IMAGE }}@sha256:\(.)") | join(" ")')
-          tag_args=$(echo "$tags" | jq -r 'split("\n") | map("--tag \(.)") | join(" ")')
-          eval docker buildx imagetools create $sources $tag_args
+          sources=""
+          for f in *; do
+            [ -f "$f" ] && sources="$sources ${{ env.REGISTRY_IMAGE }}@sha256:$(cat "$f")"
+          done
+          tag_args=""
+          while IFS= read -r tag; do
+            [ -n "$tag" ] && tag_args="$tag_args --tag $tag"
+          done <<< "$DOCKER_METADATA_OUTPUT_TAGS"
+          docker buildx imagetools create $sources $tag_args
 
       - name: Inspect image
         run: |
