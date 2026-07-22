@@ -17,12 +17,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
-      fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -63,110 +57,25 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64
           build-args: |
             CADDY_VERSION=${{ github.event.inputs.caddy_version || '2.11.4' }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          tags: ${{ steps.meta.outputs.tags }}
+          push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          echo "${digest#sha256:}" > "/tmp/digests/${digest#sha256:}"
-
-      - name: Sanitize platform name
-        id: platform
-        run: |
-          platform="${{ matrix.platform }}"
-          echo "name=${platform//\//-}" >> "$GITHUB_OUTPUT"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-${{ steps.platform.outputs.name }}
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  merge:
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: github.event_name != 'pull_request'
-
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: /tmp/digests
-          pattern: digests-*
-          merge-multiple: true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY_IMAGE }}
-            ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ github.event.inputs.caddy_version || '2.11.4' }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create manifest list and push
-        working-directory: /tmp/digests
-        run: |
-          sources=""
-          for f in *; do
-            [ -f "$f" ] && sources="$sources ${{ env.REGISTRY_IMAGE }}@sha256:$(cat "$f")"
-          done
-          tag_args=""
-          while IFS= read -r tag; do
-            [ -n "$tag" ] && tag_args="$tag_args --tag $tag"
-          done <<< "$DOCKER_METADATA_OUTPUT_TAGS"
-          docker buildx imagetools create $sources $tag_args
-
-      - name: Inspect image
-        run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
-
   release:
     runs-on: ubuntu-latest
-    needs: [merge]
+    needs: [build]
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Generate release notes
-        id: notes
-        run: |
-          echo "body=Caddy with klzgrad/forwardproxy@naive plugin. Built from caddy:${{ github.ref_name }}." > "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
